@@ -10,6 +10,7 @@ import { IBook, ISavedBook } from "../types";
 import BookCard from "./BookCard";
 import SavedBookCard from "./SavedBookCard";
 import { logoutUser } from "../redux/userSlice";
+import SavedBookInSearch from "./SavedBookInSearch";
 
 const SearchBar = () => {
   const dispatch = useDispatch();
@@ -30,15 +31,25 @@ const SearchBar = () => {
     setSearchedBooks([]);
   };
 
-  const handleSearch = async (e: React.FormEvent) => {
-    e.preventDefault();
-    clearData();
+  const searchData = async () => {
     const searchData = await searchBook({
       search: search,
       headers: { key: key, secret: secret },
     }).unwrap();
+
+    const allBooksData = await getAllBooks({
+      headers: { key: key, secret: secret },
+    }).unwrap();
+
+    setSavedBooks(allBooksData.data);
     setSearchedBooks(searchData.data);
     if (searchData.data.length === 0) setNoBooks("There are no books");
+  };
+
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    clearData();
+    searchData();
   };
 
   const handleAllBooks = async () => {
@@ -47,7 +58,7 @@ const SearchBar = () => {
       headers: { key: key, secret: secret },
     }).unwrap();
     setSavedBooks(allBooksData.data);
-    if (allBooksData.data === null) setNoBooks("There are no books");
+    if (allBooksData.data.length === 0) setNoBooks("There are no books");
   };
 
   const handleLogout = () => {
@@ -85,30 +96,51 @@ const SearchBar = () => {
         </form>
       </div>
       {isLoading && <CircularProgress className="loader" />}
-      <div className="cards">
-        {!isLoading &&
-          searchedBooks &&
-          searchedBooks.map((book: IBook) => (
-            <BookCard key={book.isbn} book={book} />
-          ))}
-        {!isLoading &&
-          savedBooks &&
-          savedBooks.map((book: ISavedBook) => (
-            <SavedBookCard
-              key={book.book.isbn}
-              data={book}
-              handleAllBooks={handleAllBooks}
-            />
-          ))}
-        {noBooks && (
-          <Typography
-            sx={{ width: "100%", margin: "0.5em" }}
-            variant="h5"
-            textAlign="center"
-          >
-            {noBooks}
-          </Typography>
-        )}
+      <div className="cards-container">
+        <div className="cards">
+          {!isLoading &&
+            searchedBooks &&
+            searchedBooks.map((book: IBook) => {
+              const isBookSaved = savedBooks.some(
+                (el) => el.book.isbn === book.isbn
+              );
+              if (isBookSaved) {
+                return (
+                  <SavedBookInSearch
+                    key={book.isbn}
+                    data={savedBooks.find((el) => el.book.isbn === book.isbn)!}
+                    searchData={searchData}
+                  />
+                );
+              } else {
+                return (
+                  <BookCard
+                    book={book}
+                    key={book.isbn}
+                    searchData={searchData}
+                  />
+                );
+              }
+            })}
+          {!isLoading &&
+            savedBooks &&
+            savedBooks.map((book: ISavedBook) => (
+              <SavedBookCard
+                key={book.book.isbn}
+                data={book}
+                handleAllBooks={handleAllBooks}
+              />
+            ))}
+          {noBooks && (
+            <Typography
+              sx={{ width: "100%", margin: "0.5em" }}
+              variant="h5"
+              textAlign="center"
+            >
+              {noBooks}
+            </Typography>
+          )}
+        </div>
       </div>
     </div>
   );

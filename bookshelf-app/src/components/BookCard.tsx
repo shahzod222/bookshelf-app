@@ -13,7 +13,13 @@ import { useCreateBookMutation } from "../redux/apiSlice";
 import { IBook } from "../types";
 import { RootState } from "../redux/store";
 
-const BookCard = ({ book }: { book: IBook }) => {
+const BookCard = ({
+  book,
+  searchData,
+}: {
+  book: IBook;
+  searchData: () => void;
+}) => {
   const [createBook] = useCreateBookMutation();
   const key = useSelector((state: RootState) => state.user.key);
   const secret = useSelector((state: RootState) => state.user.secret);
@@ -24,7 +30,7 @@ const BookCard = ({ book }: { book: IBook }) => {
         isbn: book.isbn,
       },
       headers: { key: key, secret: secret },
-    });
+    }).then(() => searchData());
   };
 
   return (
