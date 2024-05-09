@@ -101,17 +101,29 @@ const SearchBar = () => {
           {!isLoading &&
             searchedBooks &&
             searchedBooks.map((book: IBook) => {
-              const isBookSaved = savedBooks.some(
-                (el) => el.book.isbn === book.isbn
-              );
-              if (isBookSaved) {
-                return (
-                  <SavedBookInSearch
-                    key={book.isbn}
-                    data={savedBooks.find((el) => el.book.isbn === book.isbn)!}
-                    searchData={searchData}
-                  />
+              if (savedBooks) {
+                const isBookSaved = savedBooks.some(
+                  (el) => el.book.isbn === book.isbn
                 );
+                if (isBookSaved) {
+                  return (
+                    <SavedBookInSearch
+                      key={book.isbn}
+                      data={
+                        savedBooks.find((el) => el.book.isbn === book.isbn)!
+                      }
+                      searchData={searchData}
+                    />
+                  );
+                } else {
+                  return (
+                    <BookCard
+                      book={book}
+                      key={book.isbn}
+                      searchData={searchData}
+                    />
+                  );
+                }
               } else {
                 return (
                   <BookCard
